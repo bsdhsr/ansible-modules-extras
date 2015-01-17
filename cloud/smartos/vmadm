@@ -1,7 +1,7 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# © 2014, Hugo Silva <hsr@freebsd.consulting@gmail.com>
+# © 2014, Hugo Silva <freebsd.consulting@gmail.com>
 
 DOCUMENTATION = '''
 ---
@@ -83,6 +83,7 @@ EXAMPLES = '''
 
 import json
 import os
+import hashlib
 
 def check_subparam(module, subparam, params, state):
     if not params.get(subparam, False):
@@ -186,7 +187,7 @@ def main():
 
         # handles most other states.
         if state in [ 'started', 'stopped', 'rebooted', 'absent' ]:
-            rc, so, se = module.run_command('%s %s %s' % (vmadm_path, state.strip('ed').replace('opp', 'op'), uuid))
+            rc, so, se = module.run_command('%s %s %s' % (vmadm_path, state.strip('ed').replace('opp', 'op').replace('absent', 'destroy'), uuid))
 
             # detect whether the state was changed.
             # NOTE: oddly enough, it uses stderr here (2014/Dec/25)
@@ -199,7 +200,6 @@ def main():
 
             # In order to be idempotent, we need to compare the values that we're being asked to update
             # against the values stored in the hypervisor.
-            import hashlib
             vm_json_hash = hashlib.sha1(vmadm_get_vm_json_description(module, vmadm_path, uuid)).hexdigest()
 
             if proplist:
