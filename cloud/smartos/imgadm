@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 # © 2014, Hugo Silva <freebsd.consulting@gmail.com>
@@ -17,13 +17,13 @@ description:
 options:
     command:
         required: true
-        choices: [sources, import, update]
+        choices: [sources, image]
         description:
         - which subcommand to run
     url:
         required: false
         description:
-        - url for a imgapi server (used for 'sources')
+        - url for a imgapi server (used with command=sources)
     state:
         required: false
         choices: [present, absent]
@@ -39,14 +39,13 @@ options:
         required: false
         default: 'zones'
         description:
-        - an alternative zpool name. used for importing/deleted
+        - an alternative zpool name (not yet implemented)
     update:
         required: false
-        description:
         default: no
         choices: [yes, no, true, false, 1, 0, True, False]
         description:
-        - update image list, or optionally a single image. Used with command='image'
+        - update image list, or optionally a single image. Used with command=image
 '''
 
 EXAMPLES = '''
