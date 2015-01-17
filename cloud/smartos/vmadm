@@ -22,6 +22,11 @@ options:
         choices: [present, absent, rebooted, started, stopped, updated]
         description:
         - which state the virtual machine should be in
+    force:
+        required: false
+        choices: [yes, no, true, false, 1, 0, True, False]
+        description:
+        - if true, will immediately shutdown/reboot, instead of giving the vm time do so, cleanly
     uuid:
         required: false
         description:
@@ -53,14 +58,26 @@ EXAMPLES = '''
 # Stop a previously created vm (by alias)
 - vmadm: alias=webserver state=stopped
 
+# Forcibly stop a previously created vm (by alias)
+- vmadm: alias=webserver state=stopped force=yes
+
 # Stop a previously created vm (by uuid)
 - vmadm: uuid=e19429c2-f412-4210-b0cf-5ed59b81b8f1 state=stopped
+
+# Forcibly stop a previously created vm (by uuid)
+- vmadm: uuid=e19429c2-f412-4210-b0cf-5ed59b81b8f1 state=stopped force=yes
 
 # Reboot a vm (by alias)
 - vmadm: alias=webserver state=rebooted
 
+# Forcibly reboot a vm (by alias)
+- vmadm: alias=webserver state=rebooted force=yes
+
 # Reboot a vm (by uuid)
 - vmadm: uuid=e19429c2-f412-4210-b0cf-5ed59b81b8f1 state=rebooted
+
+# Forcibly reboot a vm (by uuid)
+- vmadm: uuid=e19429c2-f412-4210-b0cf-5ed59b81b8f1 state=rebooted force=yes
 
 # Update a vm, using a property list (by alias)
 - vmadm: alias=webserver proplist='ram=256 quota=64' state=updated
@@ -135,7 +152,8 @@ def main():
             uuid        = dict(default=None, aliases=['name'], type='str', required=False),
             alias       = dict(default=None, type='str', required=False),
             manifest    = dict(default=None, type='str', required=False),
-            proplist    = dict(default=None, type='str', required=False)
+            proplist    = dict(default=None, type='str', required=False),
+            force       = dict(default='no', choices=BOOLEANS, type='bool', required=False)
         ),
         mutually_exclusive = [['alias', 'uuid'], ['proplist', 'manifest']]
     )
@@ -187,7 +205,10 @@ def main():
 
         # handles most other states.
         if state in [ 'started', 'stopped', 'rebooted', 'absent' ]:
-            rc, so, se = module.run_command('%s %s %s' % (vmadm_path, state.strip('ed').replace('opp', 'op').replace('absent', 'destroy'), uuid))
+            if p["force"] in BOOLEANS_TRUE and state in [ 'stopped', 'rebooted' ]:
+                rc, so, se = module.run_command('%s %s %s -F' % (vmadm_path, state.strip('ed').replace('opp', 'op').replace('absent', 'destroy'),  uuid))
+            else:
+                rc, so, se = module.run_command('%s %s %s' % (vmadm_path, state.strip('ed').replace('opp', 'op').replace('absent', 'destroy'),  uuid))
 
             # detect whether the state was changed.
             # NOTE: oddly enough, it uses stderr here (2014/Dec/25)
